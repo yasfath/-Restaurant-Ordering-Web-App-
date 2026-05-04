@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flavour Feast - Login</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="food-auth-body">
+  <main class="auth-shell auth-aesthetic">
+    <section class="auth-showcase auto-bg-slider auth-login-slider">
+      <div class="auth-brand-row">
+        <img src="images/flavour-feast-logo.svg" class="auth-logo-img" alt="Flavour Feast logo">
+        <span>Flavour Feast</span>
+      </div>
+
+      <div class="auth-copy">
+        <span class="auth-eyebrow">Fresh orders, faster checkout</span>
+        <h1>Welcome back to your table.</h1>
+        <p>Sign in with secure OTP access and continue ordering from your saved Flavour Feast experience.</p>
+      </div>
+
+      <div class="auth-stats">
+        <div>
+          <strong>30 min</strong>
+          <span>average delivery</span>
+        </div>
+        <div>
+          <strong>4.6</strong>
+          <span>customer rating</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card-modern">
+        <a class="auth-home-link" href="index.html">Back to menu</a>
+        <span class="auth-form-kicker">Welcome back</span>
+        <h2>Sign in</h2>
+        <p>Enter your registered phone number. The OTP will be sent to your mobile.</p>
+
+        <div id="toastMessage" class="food-toast"></div>
+
+        <div class="food-form-group">
+          <label for="loginPhone">Phone Number</label>
+          <div class="food-phone-group" onclick="document.getElementById('loginPhone').focus()">
+            <span>+91</span>
+            <input type="tel" id="loginPhone" placeholder="98765 43210" maxlength="10" inputmode="numeric" autocomplete="tel">
+          </div>
+        </div>
+
+        <button class="food-auth-btn food-auth-btn-primary" id="sendOtpBtn" onclick="sendLoginOtp()">Send OTP</button>
+
+        <div class="food-form-group otp-section" id="otpSection">
+          <label for="loginOtp">Enter OTP</label>
+          <input type="text" id="loginOtp" class="food-otp-input" placeholder="000000" maxlength="6">
+        </div>
+
+        <button class="food-auth-btn food-auth-btn-success" onclick="verifyLoginOtp()">Login</button>
+
+        <p class="food-auth-switch">
+          Don't have an account?
+          <a href="signup.html">Create Account</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = "http://127.0.0.1:8000";
+
+    document.getElementById("loginPhone").addEventListener("input", function () {
+      this.value = this.value.replace(/\D/g, "").slice(0, 10);
+    });
+
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toastMessage");
+      toast.textContent = message;
+      toast.className = `food-toast show ${type}`;
+      setTimeout(() => {
+        toast.className = "food-toast";
+      }, 3000);
+    }
+
+    function validatePhone(phone) {
+      return /^[6-9]\d{9}$/.test(phone);
+    }
+
+    async function sendLoginOtp() {
+      const phone = document.getElementById("loginPhone").value.trim();
+
+      if (!validatePhone(phone)) {
+        showToast("Enter a valid 10-digit Indian mobile number.", "error");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/otp/login/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showToast(data.detail || "Unable to send OTP.", "error");
+          return;
+        }
+
+        document.getElementById("otpSection").classList.add("show");
+        if (data.dev_otp) {
+          document.getElementById("loginOtp").value = data.dev_otp;
+        }
+      } catch (error) {
+        console.error(error);
+        showToast("Backend connection failed.", "error");
+      }
+    }
+
+    async function verifyLoginOtp() {
+      const phone = document.getElementById("loginPhone").value.trim();
+      const otp = document.getElementById("loginOtp").value.trim();
+
+      if (!validatePhone(phone)) {
+        showToast("Enter a valid phone number.", "error");
+        return;
+      }
+
+      if (!/^\d{6}$/.test(otp)) {
+        showToast("Enter the 6-digit OTP sent to your phone.", "error");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/otp/login/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, otp })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showToast(data.detail || "Login failed.", "error");
+          return;
+        }
+
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+        localStorage.setItem("customerSession", JSON.stringify({
+          role: "customer",
+          user: data.user,
+          loginAt: new Date().toISOString()
+        }));
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error(error);
+        showToast("Backend connection failed.", "error");
+      }
+    }
+  </script>
+</body>
+</html>

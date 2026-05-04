@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flavour Feast - Order Tracking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="checkout-app tracking-page">
+  <nav class="navbar navbar-expand-lg navbar-light sticky-top app-navbar checkout-navbar">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand feast-brand" href="index.html">
+        <img src="images/flavour-feast-logo.svg" class="brand-logo" alt="Flavour Feast logo">
+        <span>Flavour Feast</span>
+      </a>
+      <a class="btn btn-outline-warning fw-semibold" href="index.html">Back to Menu</a>
+    </div>
+  </nav>
+
+  <main class="container tracking-shell">
+    <section class="tracking-card">
+      <div class="tracking-header">
+        <div>
+          <span class="section-kicker">Live Order Status</span>
+          <h1>Live Delivery</h1>
+        </div>
+        <button class="btn btn-warning" onclick="loadActiveDelivery()">Refresh Location</button>
+      </div>
+
+      <div id="trackingMessage" class="feedback-toast"></div>
+
+      <div id="trackingResult" class="tracking-result d-none">
+        <div class="tracking-summary">
+          <div>
+            <span>Order</span>
+            <strong id="trackOrderId">-</strong>
+          </div>
+          <div>
+            <span>Customer</span>
+            <strong id="trackCustomer">-</strong>
+          </div>
+          <div>
+            <span>Total</span>
+            <strong>₹<span id="trackTotal">0.00</span></strong>
+          </div>
+        </div>
+
+        <div class="tracking-steps" id="trackingSteps"></div>
+
+        <div class="tracking-items">
+          <h3>Items</h3>
+          <ul id="trackItems"></ul>
+        </div>
+
+        <div id="liveLocationBox" class="live-location-box d-none">
+          <div>
+            <span class="section-kicker">Delivery Partner</span>
+            <h3>Live Location</h3>
+            <p id="liveLocationText">Partner is near Anna Nagar signal.</p>
+          </div>
+          <div class="mini-map">
+            <span class="map-pin restaurant-pin">R</span>
+            <span class="map-route"></span>
+            <span class="map-pin rider-pin">D</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = "http://127.0.0.1:8000";
+    const fallbackStatusSteps = ["Preparing", "Packed", "Out for Delivery", "Delivered"];
+    let activeOrderId = "";
+    let trackingPollTimer = null;
+
+    function showTrackMessage(message, type = "error") {
+      const toast = document.getElementById("trackingMessage");
+      toast.textContent = message;
+      toast.className = `feedback-toast show ${type}`;
+    }
+
+    async function loadTracking(orderId, silent = false) {
+      if (!orderId) {
+        showTrackMessage("No active delivery yet. Place a delivery order to view live location.", "success");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+        const order = await response.json();
+
+        if (!response.ok) {
+          throw new Error(order.detail || "Order not found.");
+        }
+
+        document.getElementById("trackingMessage").className = "feedback-toast";
+        document.getElementById("trackingResult").classList.remove("d-none");
+        document.getElementById("trackOrderId").textContent = `FF-${order.id}`;
+        document.getElementById("trackCustomer").textContent = order.customer_name || "-";
+        document.getElementById("trackTotal").textContent = Number(order.grand_total || 0).toFixed(2);
+        const liveLocationBox = document.getElementById("liveLocationBox");
+        const isDelivery = (order.order_type || "").toLowerCase() === "delivery";
+        liveLocationBox.classList.toggle("d-none", !isDelivery);
+        document.getElementById("liveLocationText").textContent =
+          order.status === "Delivered"
+            ? "Order delivered successfully."
+            : "Partner is moving from restaurant towards your delivery address.";
+
+        const statusSteps = order.status_flow || fallbackStatusSteps;
+        const currentIndex = statusSteps.indexOf(order.status);
+        document.getElementById("trackingSteps").innerHTML = statusSteps.map((step, index) => {
+          const state = index <= currentIndex ? "done" : "";
+          return `<div class="tracking-step ${state}"><span>${index + 1}</span><strong>${step}</strong></div>`;
+        }).join("");
+
+        document.getElementById("trackItems").innerHTML = order.items.map(item => {
+          return `<li><span>${item.name} x ${item.quantity}</span><strong>₹${(item.price * item.quantity).toFixed(2)}</strong></li>`;
+        }).join("");
+      } catch (error) {
+        document.getElementById("trackingResult").classList.add("d-none");
+        if (!silent) {
+          showTrackMessage(error.message);
+        }
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const initialOrder = params.get("order") || localStorage.getItem("lastOrderId") || "";
+
+    function loadActiveDelivery() {
+      const orderId = params.get("order") || localStorage.getItem("lastOrderId") || "";
+      activeOrderId = orderId;
+      loadTracking(orderId);
+      startTrackingPoll();
+    }
+
+    function startTrackingPoll() {
+      if (trackingPollTimer) {
+        clearInterval(trackingPollTimer);
+      }
+
+      if (!activeOrderId) return;
+
+      trackingPollTimer = setInterval(() => {
+        loadTracking(activeOrderId, true);
+      }, 4000);
+    }
+
+    activeOrderId = initialOrder;
+    loadTracking(initialOrder);
+    startTrackingPoll();
+  </script>
+</body>
+</html>

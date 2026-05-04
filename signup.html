@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flavour Feast - Signup</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="food-auth-body">
+  <main class="auth-shell auth-aesthetic">
+    <section class="auth-showcase signup-showcase auto-bg-slider auth-signup-slider">
+      <div class="auth-brand-row">
+        <img src="images/flavour-feast-logo.svg" class="auth-logo-img" alt="Flavour Feast logo">
+        <span>Flavour Feast</span>
+      </div>
+
+      <div class="auth-copy">
+        <span class="auth-eyebrow">Create account with phone OTP</span>
+        <h1>Create your flavour profile.</h1>
+        <p>Verify your mobile number once, save your details, and make every order feel effortless.</p>
+      </div>
+
+      <div class="auth-stats">
+        <div>
+          <strong>Fresh</strong>
+          <span>daily menu picks</span>
+        </div>
+        <div>
+          <strong>Secure</strong>
+          <span>OTP verification</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card-modern">
+        <a class="auth-home-link" href="index.html">Back to menu</a>
+        <span class="auth-form-kicker">New customer</span>
+        <h2>Create account</h2>
+        <p>Fill your details and receive an OTP on your phone to complete signup.</p>
+
+        <div id="toastMessage" class="food-toast"></div>
+
+        <div class="food-form-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="Your full name">
+        </div>
+
+        <div class="food-form-group">
+          <label for="signupEmail">Email Address</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com">
+        </div>
+
+        <div class="food-form-group">
+          <label for="signupPhone">Phone Number</label>
+          <div class="food-phone-group" onclick="document.getElementById('signupPhone').focus()">
+            <span>+91</span>
+            <input type="tel" id="signupPhone" placeholder="98765 43210" maxlength="10" inputmode="numeric" autocomplete="tel">
+          </div>
+        </div>
+
+        <button class="food-auth-btn food-auth-btn-primary" onclick="sendSignupOtp()">Send OTP</button>
+
+        <div class="food-form-group otp-section" id="otpSection">
+          <label for="signupOtp">Enter OTP</label>
+          <input type="text" id="signupOtp" class="food-otp-input" placeholder="000000" maxlength="6">
+        </div>
+
+        <button class="food-auth-btn food-auth-btn-success" onclick="verifySignupOtp()">Create Account</button>
+
+        <p class="food-auth-switch">
+          Already have an account?
+          <a href="login.html">Login</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = "http://127.0.0.1:8000";
+
+    document.getElementById("signupPhone").addEventListener("input", function () {
+      this.value = this.value.replace(/\D/g, "").slice(0, 10);
+    });
+
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toastMessage");
+      toast.textContent = message;
+      toast.className = `food-toast show ${type}`;
+      setTimeout(() => {
+        toast.className = "food-toast";
+      }, 3000);
+    }
+
+    function getSignupPayload() {
+      return {
+        name: document.getElementById("signupName").value.trim(),
+        email: document.getElementById("signupEmail").value.trim(),
+        phone: document.getElementById("signupPhone").value.trim()
+      };
+    }
+
+    function validateSignup(payload) {
+      if (!payload.name || !payload.email || !payload.phone) {
+        showToast("Please fill name, email and phone number.", "error");
+        return false;
+      }
+
+      if (!/^\S+@\S+\.\S+$/.test(payload.email)) {
+        showToast("Enter a valid email address.", "error");
+        return false;
+      }
+
+      if (!/^[6-9]\d{9}$/.test(payload.phone)) {
+        showToast("Enter a valid 10-digit Indian mobile number.", "error");
+        return false;
+      }
+
+      return true;
+    }
+
+    async function sendSignupOtp() {
+      const payload = getSignupPayload();
+
+      if (!validateSignup(payload)) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/otp/signup/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showToast(data.detail || "Unable to send OTP.", "error");
+          return;
+        }
+
+        document.getElementById("otpSection").classList.add("show");
+        if (data.dev_otp) {
+          document.getElementById("signupOtp").value = data.dev_otp;
+        }
+      } catch (error) {
+        console.error(error);
+        showToast("Backend connection failed.", "error");
+      }
+    }
+
+    async function verifySignupOtp() {
+      const payload = getSignupPayload();
+      const otp = document.getElementById("signupOtp").value.trim();
+
+      if (!validateSignup(payload)) return;
+
+      if (!/^\d{6}$/.test(otp)) {
+        showToast("Enter the 6-digit OTP sent to your phone.", "error");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/otp/signup/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, otp })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showToast(data.detail || "Signup failed.", "error");
+          return;
+        }
+
+        const customerUser = {
+          name: data.name,
+          email: data.email,
+          phone: data.phone
+        };
+
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("loggedInUser", JSON.stringify(customerUser));
+        localStorage.setItem("customerSession", JSON.stringify({
+          role: "customer",
+          user: customerUser,
+          loginAt: new Date().toISOString()
+        }));
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error(error);
+        showToast("Backend connection failed.", "error");
+      }
+    }
+  </script>
+</body>
+</html>

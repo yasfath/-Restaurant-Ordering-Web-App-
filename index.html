@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flavour Feast</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="quick-order-app">
+
+  <script>
+    function getCustomerSessionForPage() {
+      try {
+        const session = JSON.parse(localStorage.getItem("customerSession") || "null");
+        if (session && session.role === "customer") return session;
+      } catch (error) {
+        localStorage.removeItem("customerSession");
+      }
+
+      if (localStorage.getItem("isLoggedIn") === "true") {
+        return {
+          role: "customer",
+          user: JSON.parse(localStorage.getItem("loggedInUser") || "{}")
+        };
+      }
+
+      return null;
+    }
+
+    if (!getCustomerSessionForPage()) {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top app-navbar">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand feast-brand" href="#">
+        <img src="images/flavour-feast-logo.svg" class="brand-logo" alt="Flavour Feast logo">
+        <span>Flavour Feast</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span id="welcomeUser" class="text-white fw-semibold small"></span>
+        <button class="btn btn-light btn-sm fw-semibold" onclick="openBookingModal()">Table Booking</button>
+        <button class="cart-nav-btn" onclick="openCartPanel()">
+          My Bag <span id="cartCount" class="cart-badge">0</span>
+        </button>
+        <button class="menu-toggle-btn" onclick="openQuickMenu()" aria-label="Open menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <button class="btn btn-outline-light btn-sm fw-semibold logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="quick-menu-overlay" id="quickMenu">
+    <aside class="quick-menu-panel" aria-label="Quick menu">
+      <div class="quick-menu-header">
+        <div>
+          <span class="section-kicker">Flavour Desk</span>
+          <h3>Quick Menu</h3>
+        </div>
+        <button class="quick-menu-close" onclick="closeQuickMenu()" aria-label="Close menu">x</button>
+      </div>
+
+      <div class="quick-menu-profile">
+        <img src="images/flavour-feast-logo.svg" alt="Flavour Feast logo">
+        <div>
+          <span id="quickMenuUser">Guest</span>
+          <strong>Order, support, and settings</strong>
+        </div>
+      </div>
+
+      <div class="quick-menu-grid">
+        <button class="quick-menu-item ai-menu-item" onclick="openAiAssistantFromMenu()">
+          <span>AI Chef</span>
+          <strong>Get dish ideas from your taste</strong>
+        </button>
+        <button class="quick-menu-item" onclick="openDealsFromMenu()">
+          <span>Today Deals</span>
+          <strong>Jump to combos and offers</strong>
+        </button>
+        <button class="quick-menu-item" onclick="openLiveDeliveryFromMenu()">
+          <span>Live Delivery</span>
+          <strong>View your active delivery location</strong>
+        </button>
+        <button class="quick-menu-item" onclick="openSupportFromMenu()">
+          <span>Support</span>
+          <strong>FAQs, call, and email help</strong>
+        </button>
+        <button class="quick-menu-item" onclick="openFeedbackFromMenu()">
+          <span>Feedback</span>
+          <strong>Share food or delivery notes</strong>
+        </button>
+        <button class="quick-menu-item" onclick="openSettingsFromMenu()">
+          <span>Preferences</span>
+          <strong>Delivery, alerts, and display</strong>
+        </button>
+      </div>
+
+      <div class="quick-menu-note">
+        <span>Current mode</span>
+        <strong id="quickMenuMode">Delivery</strong>
+      </div>
+    </aside>
+  </div>
+
+  <section class="order-mode-bar">
+    <div class="container">
+      <div class="order-mode-inner">
+        <span>Start your order</span>
+        <button class="mode-chip active" onclick="selectOrderMode(this, 'Delivery')">Delivery</button>
+        <button class="mode-chip" onclick="selectOrderMode(this, 'Pickup')">Pickup</button>
+        <button class="mode-chip" onclick="selectOrderMode(this, 'Dine In')">Dine In</button>
+        <span class="mode-meta">Fresh meals, chef specials, and chilled drinks delivered fast.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero-section auto-bg-slider">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="hero-kicker">Fresh Kitchen Ordering</span>
+          <h1 class="display-4">Chef meals, snacks, bowls, and coolers.</h1>
+          <p class="lead mb-4">Build your feast with signature combos, crispy favourites, South Indian classics, desserts, and refreshing drinks.</p>
+
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg fw-bold" onclick="filterAndScroll('combo')">Explore Deals</button>
+            <button class="btn btn-outline-light btn-lg fw-bold" onclick="filterAndScroll('friedchicken')">Chef Picks</button>
+          </div>
+        </div>
+
+        <div class="hero-deal-card">
+          <span class="deal-tag">Today Special</span>
+          <h2>Family Feast Meal</h2>
+          <p>Signature mains, fries, dips, and 2 cool drinks.</p>
+          <div class="deal-price">₹699</div>
+          <button class="btn btn-light fw-bold" onclick="filterAndScroll('combo')">Explore Combos</button>
+        </div>
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <input
+            type="text"
+            id="searchInput"
+            class="form-control search-box"
+            placeholder="Search biryani, burger, dosa, mojito..."
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section class="container promo-section">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="offer-card action-card" onclick="filterAndScroll('combo')" role="button" tabindex="0">
+          <span class="offer-icon">01</span>
+          <div>
+            <span class="offer-eyebrow">Deal</span>
+            <h5>Signature Feast Offers</h5>
+            <p class="mb-0">Save on combos, rice bowls, snacks, and dips.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="offer-card action-card" onclick="openCartPanel()" role="button" tabindex="0">
+          <span class="offer-icon">02</span>
+          <div>
+            <span class="offer-eyebrow">Fast</span>
+            <h5>Express Checkout</h5>
+            <p class="mb-0">Add items to your bag and move straight to billing.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="offer-card action-card" onclick="filterAndScroll('drink')" role="button" tabindex="0">
+          <span class="offer-icon">03</span>
+          <div>
+            <span class="offer-eyebrow">Fresh</span>
+            <h5>Cool Drinks & Shakes</h5>
+            <p class="mb-0">Pair your meal with mojitos, shakes, and sodas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container menu-toolbar">
+    <div>
+      <span class="section-kicker">Browse Menu</span>
+      <h2>Order Online</h2>
+    </div>
+    <div class="menu-stats">
+      <span>41+ items</span>
+      <span>30 min delivery</span>
+    </div>
+  </div>
+
+  <div class="container category-scroll">
+    <button class="btn btn-warning filter-btn m-1" onclick="filterMenu('all')">All</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('friedchicken')">Buckets</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('pizza')">Pizza</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('burger')">Burger</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('pasta')">Pasta</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('sandwich')">Sandwich</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('shawarma')">Shawarma</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('biryani')">Biryani</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('southindian')">South Indian</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('starter')">Starters</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('snack')">Snacks</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('curry')">Curries</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('rice')">Rice Bowls</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('noodles')">Noodles</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('drink')">Cool Drinks</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('dessert')">Desserts</button>
+    <button class="btn btn-outline-warning filter-btn m-1" onclick="filterMenu('combo')">Combos</button>
+  </div>
+
+  <div class="container">
+    <div id="orderAlert" class="alert alert-success d-none text-center" role="alert">
+      Item added successfully!
+    </div>
+  </div>
+
+  <section class="container my-5 menu-section" id="menuSection">
+    <div class="row g-4">
+
+      <div class="col-md-6 col-lg-4 menu-item featured-item" data-category="friedchicken" data-name="Signature Crispy Bucket">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/chicken bucket combo.png" class="card-img-top" alt="Signature Crispy Bucket">
+            <span class="dish-offer-badge">Best Seller</span>
+          </div>
+          <div class="card-body">
+            <span class="menu-chip">Bucket</span>
+            <h5 class="card-title mt-2">Signature Crispy Bucket</h5>
+            <p class="card-text">8 crispy chicken pieces with fries, dips, and seasoning.</p>
+            <p class="price-tag">₹699</p>
+            <div class="cart-action" data-id="signature-crispy-bucket" data-name="Signature Crispy Bucket" data-price="699"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item featured-item" data-category="friedchicken" data-name="Hot Wings Box">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="https://images.unsplash.com/photo-1527477396000-e27163b481c2?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Hot Wings Box">
+            <span class="dish-offer-badge">Spicy</span>
+          </div>
+          <div class="card-body">
+            <span class="menu-chip">Wings</span>
+            <h5 class="card-title mt-2">Hot Wings Box</h5>
+            <p class="card-text">Smoky hot wings served with fries and chilli mayo.</p>
+            <p class="price-tag">₹329</p>
+            <div class="cart-action" data-id="hot-wings-box" data-name="Hot Wings Box" data-price="329"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item featured-item" data-category="friedchicken" data-name="Popcorn Chicken Cup">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="https://images.unsplash.com/photo-1562967916-eb82221dfb92?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Popcorn Chicken Cup">
+          </div>
+          <div class="card-body">
+            <span class="menu-chip">Snack</span>
+            <h5 class="card-title mt-2">Popcorn Chicken Cup</h5>
+            <p class="card-text">Bite-sized crispy chicken with peri peri sprinkle.</p>
+            <p class="price-tag">₹189</p>
+            <div class="cart-action" data-id="popcorn-chicken-cup" data-name="Popcorn Chicken Cup" data-price="189"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="friedchicken" data-name="Zinger Style Burger Meal">
+        <div class="card h-100 menu-card">
+          <img src="images/burger.jpg" class="card-img-top" alt="Zinger Style Burger Meal">
+          <div class="card-body">
+            <span class="menu-chip">Meal</span>
+            <h5 class="card-title mt-2">Zinger Style Burger Meal</h5>
+            <p class="card-text">Crispy chicken burger with fries and fresh lime soda.</p>
+            <p class="price-tag">₹349</p>
+            <div class="cart-action" data-id="zinger-style-burger-meal" data-name="Zinger Style Burger Meal" data-price="349"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="friedchicken" data-name="Crispy Strips Combo">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Crispy Strips Combo">
+          <div class="card-body">
+            <span class="menu-chip">Combo</span>
+            <h5 class="card-title mt-2">Crispy Strips Combo</h5>
+            <p class="card-text">Chicken strips, garlic dip, fries, and chilled cola.</p>
+            <p class="price-tag">₹299</p>
+            <div class="cart-action" data-id="crispy-strips-combo" data-name="Crispy Strips Combo" data-price="299"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="friedchicken" data-name="Smoky Chicken Rice Bowl">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Smoky Chicken Rice Bowl">
+          <div class="card-body">
+            <span class="menu-chip">Rice Bowl</span>
+            <h5 class="card-title mt-2">Smoky Chicken Rice Bowl</h5>
+            <p class="card-text">Seasoned rice topped with crispy chicken and sauce.</p>
+            <p class="price-tag">₹249</p>
+            <div class="cart-action" data-id="smoky-chicken-rice-bowl" data-name="Smoky Chicken Rice Bowl" data-price="249"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="pizza" data-name="Cheese Burst Pizza">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/pizza.jpg" class="card-img-top" alt="Cheese Burst Pizza">
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Cheese Burst Pizza</h5>
+            <p class="card-text">Loaded with mozzarella, cheddar, and herbs.</p>
+            <p class="price-tag">₹299</p>
+            <div class="cart-action" data-id="cheese-burst-pizza" data-name="Cheese Burst Pizza" data-price="299"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="pizza" data-name="Veg Supreme Pizza">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="https://images.unsplash.com/photo-1594007654729-407eedc4be65?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Veg Supreme Pizza">
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Veg Supreme Pizza</h5>
+            <p class="card-text">Capsicum, onion, olives, sweet corn, and premium cheese.</p>
+            <p class="price-tag">₹319</p>
+            <div class="cart-action" data-id="veg-supreme-pizza" data-name="Veg Supreme Pizza" data-price="319"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="burger" data-name="Grilled Chicken Burger">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/burger.jpg" class="card-img-top" alt="Grilled Chicken Burger">
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Grilled Chicken Burger</h5>
+            <p class="card-text">Juicy grilled chicken with spicy mayo.</p>
+            <p class="price-tag">₹199</p>
+            <div class="cart-action" data-id="grilled-chicken-burger" data-name="Grilled Chicken Burger" data-price="199"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="burger" data-name="Classic Veg Burger">
+        <div class="card h-100 menu-card">
+          <img src="images/burger2.png" class="card-img-top" alt="Classic Veg Burger">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Classic Veg Burger</h5>
+            <p class="card-text">Crunchy veg patty with fresh lettuce.</p>
+            <p class="price-tag">₹149</p>
+            <div class="cart-action" data-id="classic-veg-burger" data-name="Classic Veg Burger" data-price="149"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="pasta" data-name="Creamy Alfredo Pasta">
+        <div class="card h-100 menu-card">
+          <img src="images/pasta.jpg" class="card-img-top" alt="Creamy Alfredo Pasta">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Creamy Alfredo Pasta</h5>
+            <p class="card-text">Rich white sauce pasta served with herbs.</p>
+            <p class="price-tag">₹249</p>
+            <div class="cart-action" data-id="creamy-alfredo-pasta" data-name="Creamy Alfredo Pasta" data-price="249"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="pasta" data-name="Red Sauce Penne Pasta">
+        <div class="card h-100 menu-card">
+          <img src="images/pasta2.jpg" class="card-img-top" alt="Red Sauce Penne Pasta">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Red Sauce Penne Pasta</h5>
+            <p class="card-text">Tangy tomato sauce with soft penne pasta.</p>
+            <p class="price-tag">₹229</p>
+            <div class="cart-action" data-id="red-sauce-penne-pasta" data-name="Red Sauce Penne Pasta" data-price="229"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="sandwich" data-name="Club Sandwich">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1528735602780-2552fd46c7af?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Club Sandwich">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Club Sandwich</h5>
+            <p class="card-text">Layered sandwich with veggies and cheese.</p>
+            <p class="price-tag">₹179</p>
+            <div class="cart-action" data-id="club-sandwich" data-name="Club Sandwich" data-price="179"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="sandwich" data-name="Grilled Corn Sandwich">
+        <div class="card h-100 menu-card">
+          <img src="images/sandwich2.jpg" class="card-img-top" alt="Grilled Corn Sandwich">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Grilled Corn Sandwich</h5>
+            <p class="card-text">Creamy corn stuffing with toasted bread.</p>
+            <p class="price-tag">₹159</p>
+            <div class="cart-action" data-id="grilled-corn-sandwich" data-name="Grilled Corn Sandwich" data-price="159"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="shawarma" data-name="Chicken Shawarma">
+        <div class="card h-100 menu-card">
+          <img src="images/shawarma2.jpg" class="card-img-top" alt="Chicken Shawarma">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chicken Shawarma</h5>
+            <p class="card-text">Soft wrap filled with juicy chicken and sauce.</p>
+            <p class="price-tag">₹199</p>
+            <div class="cart-action" data-id="chicken-shawarma" data-name="Chicken Shawarma" data-price="199"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="shawarma" data-name="Paneer Shawarma">
+        <div class="card h-100 menu-card">
+          <img src="images/shawarma1.jpg" class="card-img-top" alt="Paneer Shawarma">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Paneer Shawarma</h5>
+            <p class="card-text">Paneer wrap with crunchy veggies and dip.</p>
+            <p class="price-tag">₹189</p>
+            <div class="cart-action" data-id="paneer-shawarma" data-name="Paneer Shawarma" data-price="189"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="biryani" data-name="Chicken Biryani">
+        <div class="card h-100 menu-card">
+          <img src="images/briyani1.jpg" class="card-img-top" alt="Chicken Biryani">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chicken Biryani</h5>
+            <p class="card-text">Spicy aromatic biryani with chicken.</p>
+            <p class="price-tag">₹279</p>
+            <div class="cart-action" data-id="chicken-biryani" data-name="Chicken Biryani" data-price="279"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="biryani" data-name="Veg Biryani">
+        <div class="card h-100 menu-card">
+          <img src="images/briyani2.jpg" class="card-img-top" alt="Veg Biryani">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Veg Biryani</h5>
+            <p class="card-text">Flavourful rice with mixed vegetables and masala.</p>
+            <p class="price-tag">₹229</p>
+            <div class="cart-action" data-id="veg-biryani" data-name="Veg Biryani" data-price="229"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="noodles" data-name="Chicken Hakka Noodles">
+        <div class="card h-100 menu-card">
+          <img src="images/noodles1.jpg" class="card-img-top" alt="Chicken Hakka Noodles">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chicken Hakka Noodles</h5>
+            <p class="card-text">Stir-fried noodles with chicken and vegetables.</p>
+            <p class="price-tag">₹219</p>
+            <div class="cart-action" data-id="chicken-hakka-noodles" data-name="Chicken Hakka Noodles" data-price="219"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="noodles" data-name="Veg Schezwan Noodles">
+        <div class="card h-100 menu-card">
+          <img src="images/noodles2.jpg" class="card-img-top" alt="Veg Schezwan Noodles">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Veg Schezwan Noodles</h5>
+            <p class="card-text">Spicy schezwan tossed noodles with vegetables.</p>
+            <p class="price-tag">₹189</p>
+            <div class="cart-action" data-id="veg-schezwan-noodles" data-name="Veg Schezwan Noodles" data-price="189"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="drink" data-name="Cold Coffee">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Cold Coffee">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Cold Coffee</h5>
+            <p class="card-text">Chilled coffee with cream.</p>
+            <p class="price-tag">₹129</p>
+            <div class="cart-action" data-id="cold-coffee" data-name="Cold Coffee" data-price="129"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="drink" data-name="Fresh Lime Soda">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Fresh Lime Soda">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Fresh Lime Soda</h5>
+            <p class="card-text">Refreshing lime with ice.</p>
+            <p class="price-tag">₹89</p>
+            <div class="cart-action" data-id="fresh-lime-soda" data-name="Fresh Lime Soda" data-price="89"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="dessert" data-name="Brownie Sundae">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Brownie Sundae">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Brownie Sundae</h5>
+            <p class="card-text">Warm brownie with ice cream and chocolate sauce.</p>
+            <p class="price-tag">₹149</p>
+            <div class="cart-action" data-id="brownie-sundae" data-name="Brownie Sundae" data-price="149"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="dessert" data-name="Chocolate Lava Cake">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Chocolate Lava Cake">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chocolate Lava Cake</h5>
+            <p class="card-text">Soft cake with warm molten chocolate center.</p>
+            <p class="price-tag">₹139</p>
+            <div class="cart-action" data-id="chocolate-lava-cake" data-name="Chocolate Lava Cake" data-price="139"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="combo" data-name="Chicken Bucket Combo">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/chicken bucket combo.png" class="card-img-top" alt="Chicken Bucket Combo">
+            <span class="dish-offer-badge">Save ₹120</span>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chicken Bucket Combo</h5>
+            <p class="card-text">Fried chicken bucket + fries + coke.</p>
+            <p class="price-tag">₹499</p>
+            <div class="cart-action" data-id="chicken-bucket-combo" data-name="Chicken Bucket Combo" data-price="499"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="combo" data-name="Burger Combo">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/burger-combo.jpg" class="card-img-top" alt="Burger Combo">
+            <span class="dish-offer-badge">Combo Offer</span>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Burger Combo</h5>
+            <p class="card-text">Burger + fries + coke.</p>
+            <p class="price-tag">₹299</p>
+            <div class="cart-action" data-id="burger-combo" data-name="Burger Combo" data-price="299"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="combo" data-name="Shawarma Combo">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/shawarma combo.avif" class="card-img-top" alt="Shawarma Combo">
+            <span class="dish-offer-badge">Hot Deal</span>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Shawarma Combo</h5>
+            <p class="card-text">Chicken shawarma + fries + drink.</p>
+            <p class="price-tag">₹249</p>
+            <div class="cart-action" data-id="shawarma-combo" data-name="Shawarma Combo" data-price="249"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="combo" data-name="Bucket Biryani Combo">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/bucket briyani.avif" class="card-img-top" alt="Bucket Biryani Combo">
+            <span class="dish-offer-badge">Family Pack</span>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Bucket Biryani Combo</h5>
+            <p class="card-text">Large biryani bucket + chicken 65 + drink.</p>
+            <p class="price-tag">₹599</p>
+            <div class="cart-action" data-id="bucket-biryani-combo" data-name="Bucket Biryani Combo" data-price="599"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="combo" data-name="Pizza Combo">
+        <div class="card h-100 menu-card">
+          <div class="image-badge-wrap">
+            <img src="images/pizza combo.webp" class="card-img-top" alt="Pizza Combo">
+            <span class="dish-offer-badge">Combo Deal</span>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title mt-2">Pizza Combo</h5>
+            <p class="card-text">Medium pizza + garlic bread + coke.</p>
+            <p class="price-tag">₹399</p>
+            <div class="cart-action" data-id="pizza-combo" data-name="Pizza Combo" data-price="399"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="southindian" data-name="Ghee Masala Dosa">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1668236543090-82eba5ee5976?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Ghee Masala Dosa">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Ghee Masala Dosa</h5>
+            <p class="card-text">Crispy dosa with potato masala, chutney, and sambar.</p>
+            <p class="price-tag">₹139</p>
+            <div class="cart-action" data-id="ghee-masala-dosa" data-name="Ghee Masala Dosa" data-price="139"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="southindian" data-name="Mini Idli Sambar">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1630383249896-424e482df921?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Mini Idli Sambar">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Mini Idli Sambar</h5>
+            <p class="card-text">Soft mini idlis soaked in hot sambar with ghee topping.</p>
+            <p class="price-tag">₹119</p>
+            <div class="cart-action" data-id="mini-idli-sambar" data-name="Mini Idli Sambar" data-price="119"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="southindian" data-name="Pongal Vada Combo">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Pongal Vada Combo">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Pongal Vada Combo</h5>
+            <p class="card-text">Hot ven pongal with medu vada, chutney, and sambar.</p>
+            <p class="price-tag">₹149</p>
+            <div class="cart-action" data-id="pongal-vada-combo" data-name="Pongal Vada Combo" data-price="149"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="starter" data-name="Chicken 65">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Chicken 65">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chicken 65</h5>
+            <p class="card-text">Spicy fried chicken tossed with curry leaves and masala.</p>
+            <p class="price-tag">₹229</p>
+            <div class="cart-action" data-id="chicken-65" data-name="Chicken 65" data-price="229"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="starter" data-name="Paneer Tikka">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Paneer Tikka">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Paneer Tikka</h5>
+            <p class="card-text">Tandoori paneer cubes with peppers, onions, and mint dip.</p>
+            <p class="price-tag">₹219</p>
+            <div class="cart-action" data-id="paneer-tikka" data-name="Paneer Tikka" data-price="219"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="starter" data-name="Crispy Fish Fingers">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1625943553852-781c6dd46faa?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Crispy Fish Fingers">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Crispy Fish Fingers</h5>
+            <p class="card-text">Golden fish strips served with garlic mayo and salad.</p>
+            <p class="price-tag">₹249</p>
+            <div class="cart-action" data-id="crispy-fish-fingers" data-name="Crispy Fish Fingers" data-price="249"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="snack" data-name="Loaded French Fries">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Loaded French Fries">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Loaded French Fries</h5>
+            <p class="card-text">Crispy fries topped with cheese, peri peri, and herbs.</p>
+            <p class="price-tag">₹139</p>
+            <div class="cart-action" data-id="loaded-french-fries" data-name="Loaded French Fries" data-price="139"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="snack" data-name="Veg Spring Rolls">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Veg Spring Rolls">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Veg Spring Rolls</h5>
+            <p class="card-text">Crunchy rolls with vegetable filling and sweet chilli sauce.</p>
+            <p class="price-tag">₹159</p>
+            <div class="cart-action" data-id="veg-spring-rolls" data-name="Veg Spring Rolls" data-price="159"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="snack" data-name="Cheese Garlic Bread">
+        <div class="card h-100 menu-card">
+          <img src="https://unsplash.com/photos/hLSwCdJLMWE/download?force=true&w=1200" class="card-img-top" alt="Cheese Garlic Bread">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Cheese Garlic Bread</h5>
+            <p class="card-text">Toasted bread with garlic butter, mozzarella, and oregano.</p>
+            <p class="price-tag">₹129</p>
+            <div class="cart-action" data-id="cheese-garlic-bread" data-name="Cheese Garlic Bread" data-price="129"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="curry" data-name="Butter Chicken">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Butter Chicken">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Butter Chicken</h5>
+            <p class="card-text">Creamy tomato gravy with tender chicken and butter finish.</p>
+            <p class="price-tag">₹299</p>
+            <div class="cart-action" data-id="butter-chicken" data-name="Butter Chicken" data-price="299"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="curry" data-name="Paneer Butter Masala">
+        <div class="card h-100 menu-card">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Paneer_Butter_Masala.jpg/960px-Paneer_Butter_Masala.jpg" class="card-img-top" alt="Paneer Butter Masala">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Paneer Butter Masala</h5>
+            <p class="card-text">Soft paneer cubes in rich makhani gravy with cream.</p>
+            <p class="price-tag">₹259</p>
+            <div class="cart-action" data-id="paneer-butter-masala" data-name="Paneer Butter Masala" data-price="259"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="curry" data-name="Chettinad Chicken Curry">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Chettinad Chicken Curry">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chettinad Chicken Curry</h5>
+            <p class="card-text">Peppery South Indian curry with roasted spices.</p>
+            <p class="price-tag">₹289</p>
+            <div class="cart-action" data-id="chettinad-chicken-curry" data-name="Chettinad Chicken Curry" data-price="289"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="rice" data-name="Curd Rice Bowl">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Curd Rice Bowl">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Curd Rice Bowl</h5>
+            <p class="card-text">Comforting curd rice with tempering and pickle.</p>
+            <p class="price-tag">₹119</p>
+            <div class="cart-action" data-id="curd-rice-bowl" data-name="Curd Rice Bowl" data-price="119"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="rice" data-name="Schezwan Fried Rice">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Schezwan Fried Rice">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Schezwan Fried Rice</h5>
+            <p class="card-text">Spicy fried rice with vegetables and schezwan sauce.</p>
+            <p class="price-tag">₹189</p>
+            <div class="cart-action" data-id="schezwan-fried-rice" data-name="Schezwan Fried Rice" data-price="189"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="rice" data-name="Chicken Fried Rice">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1596797038530-2c107229654b?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Chicken Fried Rice">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Chicken Fried Rice</h5>
+            <p class="card-text">Wok-tossed rice with chicken, egg, and spring onions.</p>
+            <p class="price-tag">₹219</p>
+            <div class="cart-action" data-id="chicken-fried-rice" data-name="Chicken Fried Rice" data-price="219"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="drink" data-name="Blue Lime Mojito">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1544145945-f90425340c7e?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Blue Lime Mojito">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Blue Lime Mojito</h5>
+            <p class="card-text">Chilled blue lime cooler with mint and crushed ice.</p>
+            <p class="price-tag">₹119</p>
+            <div class="cart-action" data-id="blue-lime-mojito" data-name="Blue Lime Mojito" data-price="119"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="drink" data-name="Mango Milkshake">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Mango Milkshake">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Mango Milkshake</h5>
+            <p class="card-text">Thick mango shake with ice cream and fresh mango notes.</p>
+            <p class="price-tag">₹149</p>
+            <div class="cart-action" data-id="mango-milkshake" data-name="Mango Milkshake" data-price="149"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 menu-item" data-category="drink" data-name="Watermelon Cooler">
+        <div class="card h-100 menu-card">
+          <img src="https://images.unsplash.com/photo-1523371054106-bbf80586c38c?q=80&w=1200&auto=format&fit=crop" class="card-img-top" alt="Watermelon Cooler">
+          <div class="card-body">
+            <h5 class="card-title mt-2">Watermelon Cooler</h5>
+            <p class="card-text">Fresh watermelon drink with lemon, mint, and ice.</p>
+            <p class="price-tag">₹99</p>
+            <div class="cart-action" data-id="watermelon-cooler" data-name="Watermelon Cooler" data-price="99"></div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </section>
+
+  <div class="booking-modal" id="bookingModal">
+    <div class="booking-box">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Table Booking</h4>
+        <button class="close-btn" onclick="closeBookingModal()">×</button>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Name</label>
+        <input type="text" id="bookingName" class="form-control" placeholder="Enter your name">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Phone</label>
+        <input type="text" id="bookingPhone" class="form-control" placeholder="Enter phone number">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Date</label>
+        <input type="date" id="bookingDate" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Time</label>
+        <input type="time" id="bookingTime" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Guests</label>
+        <input type="number" id="bookingGuests" class="form-control" placeholder="Number of guests">
+      </div>
+
+      <button class="btn btn-warning w-100 fw-semibold" onclick="submitBooking()">Book Table</button>
+    </div>
+  </div>
+
+  <div class="cart-panel-overlay" id="cartPanel">
+    <aside class="cart-panel" aria-label="Cart summary">
+      <div class="cart-panel-header">
+        <div>
+          <span class="cart-panel-kicker">Selected Items</span>
+          <h3>Your Cart</h3>
+        </div>
+        <button class="cart-panel-close" onclick="closeCartPanel()" aria-label="Close cart">x</button>
+      </div>
+
+      <div id="emptyOrderText" class="cart-empty">
+        <h5>Your cart is empty</h5>
+        <p>Add items from the menu to continue.</p>
+      </div>
+
+      <ul id="orderList" class="cart-panel-list"></ul>
+
+      <div class="cart-panel-footer">
+        <div class="cart-total-row">
+          <span>Total</span>
+          <strong>₹<span id="totalPrice">0</span></strong>
+        </div>
+        <div class="cart-panel-actions">
+          <button class="btn btn-outline-danger" onclick="clearCart()">Clear</button>
+          <button class="btn btn-success" onclick="goToCustomerPage()">Buy Now</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="app-modal" id="supportModal">
+    <div class="app-modal-box">
+      <div class="app-modal-header">
+        <div>
+          <span class="section-kicker">Customer Care</span>
+          <h3>Help & Support</h3>
+        </div>
+        <button class="close-btn" onclick="closeSupportModal()">×</button>
+      </div>
+
+      <div class="support-actions">
+        <a href="tel:+919876543210">Call Restaurant</a>
+        <a href="mailto:yasmeen@flavourfeast.com">Email Support</a>
+        <button onclick="openFeedbackModal()">Share Feedback</button>
+      </div>
+
+      <div class="faq-list">
+        <details open>
+          <summary>Where can I track my order?</summary>
+          <p>After placing an order, your order summary and bill are available on the checkout page. For live updates, call support.</p>
+        </details>
+        <details>
+          <summary>Can I change delivery to pickup?</summary>
+          <p>Yes. Choose Delivery, Pickup, or Dine In before checkout. The selected option is carried into billing.</p>
+        </details>
+        <details>
+          <summary>How do coupons work?</summary>
+          <p>Use SAVE10 during checkout for 10% off on orders above ₹500.</p>
+        </details>
+        <details>
+          <summary>What payment options are available?</summary>
+          <p>Cash on Delivery, UPI, Credit Card, and Debit Card are available in checkout.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-modal" id="feedbackModal">
+    <div class="app-modal-box">
+      <div class="app-modal-header">
+        <div>
+          <span class="section-kicker">Your Voice</span>
+          <h3>Feedback</h3>
+        </div>
+        <button class="close-btn" onclick="closeFeedbackModal()">×</button>
+      </div>
+
+      <div id="feedbackToast" class="feedback-toast"></div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Rating</label>
+        <select id="feedbackRating" class="form-select">
+          <option value="">Select rating</option>
+          <option value="5">5 - Excellent</option>
+          <option value="4">4 - Good</option>
+          <option value="3">3 - Average</option>
+          <option value="2">2 - Needs improvement</option>
+          <option value="1">1 - Poor</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Feedback Type</label>
+        <select id="feedbackType" class="form-select">
+          <option value="Food">Food</option>
+          <option value="Delivery">Delivery</option>
+          <option value="App Experience">App Experience</option>
+          <option value="Customer Support">Customer Support</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Comments</label>
+        <textarea id="feedbackMessage" class="form-control" rows="4" placeholder="Tell us what went well or what we can improve"></textarea>
+      </div>
+
+      <button class="btn btn-warning w-100 fw-semibold" onclick="submitFeedback()">Submit Feedback</button>
+    </div>
+  </div>
+
+  <div class="app-modal" id="settingsModal">
+    <div class="app-modal-box settings-modal-box">
+      <div class="app-modal-header">
+        <div>
+          <span class="section-kicker">Preferences</span>
+          <h3>Settings</h3>
+        </div>
+        <button class="close-btn" onclick="closeSettingsModal()">×</button>
+      </div>
+
+      <div class="settings-panel">
+        <div class="settings-row">
+          <div>
+            <span>Default order mode</span>
+            <strong id="settingsOrderMode">Delivery</strong>
+          </div>
+          <div class="settings-mode-buttons">
+            <button onclick="setPreferredOrderMode('Delivery')">Delivery</button>
+            <button onclick="setPreferredOrderMode('Pickup')">Pickup</button>
+            <button onclick="setPreferredOrderMode('Dine In')">Dine In</button>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div>
+            <span>Motion</span>
+            <strong>Hero background animation</strong>
+          </div>
+          <label class="settings-switch">
+            <input type="checkbox" id="motionToggle" onchange="toggleMotionSetting(this.checked)">
+            <span data-off="Off" data-on="On"></span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <div>
+            <span>Order Alerts</span>
+            <strong>Show cart and checkout updates</strong>
+          </div>
+          <label class="settings-switch">
+            <input type="checkbox" id="alertsToggle" onchange="toggleOrderAlerts(this.checked)">
+            <span data-off="Off" data-on="On"></span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <div>
+            <span>Checkout Memory</span>
+            <strong>Keep delivery details for next order</strong>
+          </div>
+          <label class="settings-switch">
+            <input type="checkbox" id="checkoutMemoryToggle" onchange="toggleCheckoutMemory(this.checked)">
+            <span data-off="Off" data-on="On"></span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <div>
+            <span>Menu View</span>
+            <strong>Compact food cards</strong>
+          </div>
+          <label class="settings-switch">
+            <input type="checkbox" id="compactMenuToggle" onchange="toggleCompactMenu(this.checked)">
+            <span data-off="Off" data-on="On"></span>
+          </label>
+        </div>
+
+        <div class="settings-row settings-danger-row">
+          <div>
+            <span>Cart</span>
+            <strong id="settingsCartStatus">0 items in My Bag</strong>
+          </div>
+          <button class="settings-action-btn" onclick="clearCartFromSettings()">Clear Bag</button>
+        </div>
+
+        <div class="settings-footer-actions">
+          <button onclick="resetPreferences()">Reset Preferences</button>
+          <button onclick="closeSettingsModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-modal" id="aiAssistantModal">
+    <div class="app-modal-box ai-assistant-box">
+      <div class="app-modal-header">
+        <div>
+          <span class="section-kicker">OpenAI Assistant</span>
+          <h3>AI Chef</h3>
+        </div>
+        <button class="close-btn" onclick="closeAiAssistantModal()">×</button>
+      </div>
+
+      <div class="ai-chat-window" id="aiChatWindow">
+        <div class="ai-message assistant">
+          Hi! Ask me for combo ideas, spicy picks, desserts, or what matches your cart.
+        </div>
+      </div>
+
+      <div id="aiAssistantToast" class="feedback-toast"></div>
+
+      <div class="ai-chat-input">
+        <input type="text" id="aiAssistantInput" class="form-control" placeholder="Ask: best combo for two...">
+        <button class="btn btn-warning fw-semibold" onclick="sendAiAssistantMessage()">Ask</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>Flavour Feast</h3>
+          <p>Freshly prepared meals, quick ordering, and a comfortable dining experience in the heart of Chennai.</p>
+        </div>
+
+        <div class="footer-block">
+          <h5>Contact</h5>
+          <a href="tel:+919876543210">Call: +91 98765 43210</a>
+          <a href="mailto:hello@flavourfeast.com">Mail: yasmeen@flavourfeast.com</a>
+          <button class="footer-link-button" onclick="openSupportModal()">Help & Support</button>
+          <button class="footer-link-button" onclick="openFeedbackModal()">Feedback</button>
+        </div>
+
+        <div class="footer-block">
+          <h5>Address</h5>
+          <p>123 Food Street, Anna Nagar,<br>Chennai, Tamil Nadu 600040</p>
+        </div>
+
+        <div class="footer-block">
+          <h5>Follow Us</h5>
+          <div class="footer-socials">
+            <a href="https://www.linkedin.com/in/yasmeen-fathima23" target="_blank" rel="noopener noreferrer" aria-label="Yasmeen Fathima LinkedIn">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6.94 8.98H3.74v10.27h3.2V8.98ZM5.34 4.75a1.86 1.86 0 1 0 0 3.72 1.86 1.86 0 0 0 0-3.72Zm13.9 8.61c0-3.08-1.64-4.51-3.83-4.51-1.76 0-2.55.97-2.99 1.65V8.98H9.35v10.27h3.2v-5.08c0-1.34.25-2.64 1.92-2.64 1.64 0 1.66 1.54 1.66 2.73v4.99h3.2l-.09-5.89Z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+            <a href="https://twitter.com/yasmeen-fathima23" target="_blank" rel="noopener noreferrer" aria-label="Yasmeen Fathima Twitter">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M17.53 3.75h3.09l-6.75 7.72 7.94 10.49h-6.22l-4.87-6.37-5.57 6.37H2.05l7.22-8.25L1.66 3.75h6.38l4.4 5.82 5.09-5.82Zm-1.08 16.36h1.71L7.11 5.5H5.27l11.18 14.61Z"/>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2026 Flavour Feast. All rights reserved.</span>
+        <span>Made for good food and happy customers.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

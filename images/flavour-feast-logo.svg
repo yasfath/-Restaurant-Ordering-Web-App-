@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Flavour Feast Logo</title>
+  <desc id="desc">A warm restaurant logo with a chef hat and Flavour Feast lettering.</desc>
+  <rect width="512" height="512" rx="34" fill="#fff8ee"/>
+  <g fill="none" stroke="#b45114" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M205 171c-43 2-76-21-75-56 1-30 28-52 58-45 13-32 48-52 84-44 45 10 87 59 96 119 6 42-12 68-44 72-11 1-22 0-33-4l-25 52-91-27 8-61c7-2 14-4 22-6Z" stroke-width="8"/>
+    <path d="M184 129c-8 17-4 34 11 44 22 15 54 6 82-12 18-12 38-20 59-19" stroke-width="6"/>
+    <path d="M176 238l91 27" stroke-width="8"/>
+  </g>
+  <text x="256" y="327" text-anchor="middle"
+        font-family="Brush Script MT, Segoe Script, Comic Sans MS, cursive"
+        font-size="92" font-weight="700" fill="#b45114">Flavour</text>
+  <text x="256" y="390" text-anchor="middle"
+        font-family="Trebuchet MS, Arial, sans-serif"
+        font-size="56" font-weight="900" letter-spacing="5" fill="#5b3a34">FEAST</text>
+  <text x="256" y="432" text-anchor="middle"
+        font-family="Trebuchet MS, Arial, sans-serif"
+        font-size="25" font-weight="900" letter-spacing="2.5" fill="#5b3a34">FRESH RESTAURANT FOOD</text>
+</svg>
